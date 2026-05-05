@@ -330,42 +330,42 @@ domain:
       members:
         - name: unavailable 
           value: -1
-          # The entity is unavailable
+          remarks: The entity is unavailable
         - name: inactive
           value: 0
-          # The entity is considered inactive.
+          remarks: The entity is considered inactive.
         - name: active
           value: 1
-          # The entity is considered active.
+          remarks: The entity is considered active.
     - name: resolution
       base: enum<int8, standard>
       from: []
       members:
         - name: declined
           value: 0
-          # The proposal has been declined.
+          remarks: The proposal has been declined.
         - name: approved
           value: 1
-          # The proposal has been approved.
+          remarks: The proposal has been approved.
         - name: shelved
           value: 2
-          # The proposal has been shelved for later approach.
+          remarks: The proposal has been shelved for later approach.
     - name: stage
       base: enum<int8, standard>
       from: []
       members:
         - name: new
           value: 0
-          # The proposal is new.
+          remarks: The proposal is new.
         - name: open
           value: 1
-          # The proposal is open to providing evidence or modifications.
+          remarks: The proposal is open to providing evidence or modifications.
         - name: voting
           value: 2
-          # The proposal is open to voting but not modification or provision of evidence.
+          remarks: The proposal is open to voting but not modification or provision of evidence.
         - name: resolved
           value: 3
-          # The proposal is closed to voting, modification, or provision of evidence.
+          remarks: The proposal is closed to voting, modification, or provision of evidence.
     - name: vote
       base: enum<int8, standard>
       from: []

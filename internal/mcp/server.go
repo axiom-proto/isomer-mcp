@@ -28,6 +28,8 @@ type readResourceResult struct {
 	Contents []readResourceContent `json:"contents"`
 }
 
+// handleInitialize responds to the MCP initialize request with the server's
+// supported capabilities. Isomer currently exposes read-only resources.
 func handleInitialize(req schema.Request) {
 	response := schema.Response{
 		JsonRPC: jsonRPCVersion,
@@ -51,6 +53,7 @@ func handleInitialize(req schema.Request) {
 	render(response)
 }
 
+// handleListResources returns every modeled item as an individual MCP resource.
 func handleListResources(req schema.Request, store *IsomerStore) {
 	var resourcesList []schema.ResourceListResponseItem
 
@@ -73,6 +76,8 @@ func handleListResources(req schema.Request, store *IsomerStore) {
 	render(resp)
 }
 
+// handleReadResource resolves a single isomer://<kind>/<name> URI and returns
+// the matching model item serialized back to YAML.
 func handleReadResource(req schema.Request, store *IsomerStore) {
 	var params struct {
 		URI string `json:"uri"`
@@ -107,6 +112,7 @@ func handleReadResource(req schema.Request, store *IsomerStore) {
 	})
 }
 
+// lookupResourceYAML finds the resource addressed by uri and marshals it to YAML.
 func lookupResourceYAML(uri string, store *IsomerStore) (string, bool, error) {
 	kind, name, err := parseResourceURI(uri)
 	if err != nil {
@@ -140,6 +146,10 @@ func lookupResourceYAML(uri string, store *IsomerStore) (string, bool, error) {
 	}
 }
 
+// parseResourceURI validates and splits an Isomer resource URI.
+//
+// Collection-level reads are not supported here. Callers must provide a concrete
+// item URI in the form isomer://<kind>/<name>, for example isomer://entities/tenant.
 func parseResourceURI(uri string) (string, string, error) {
 	if !strings.HasPrefix(uri, uriScheme) {
 		return "", "", fmt.Errorf("uri must use %s scheme", uriScheme)
@@ -154,6 +164,8 @@ func parseResourceURI(uri string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
+// marshalYAML serializes a found resource, preserving the not-found case for
+// handleReadResource to translate into an MCP error response.
 func marshalYAML(value interface{}, ok bool) (string, bool, error) {
 	if !ok {
 		return "", false, nil
@@ -167,6 +179,7 @@ func marshalYAML(value interface{}, ok bool) (string, bool, error) {
 	return string(buffer), true, nil
 }
 
+// appendResourceItems appends sorted list entries for one resource kind.
 func appendResourceItems[T any](items *[]schema.ResourceListResponseItem, kind string, label string, values map[string]T) {
 	for _, name := range sortedKeys(values) {
 		*items = append(*items, schema.ResourceListResponseItem{
@@ -177,6 +190,7 @@ func appendResourceItems[T any](items *[]schema.ResourceListResponseItem, kind s
 	}
 }
 
+// sortedKeys returns deterministic resource ordering for stable inspector output.
 func sortedKeys[T any](values map[string]T) []string {
 	keys := make([]string, 0, len(values))
 	for key := range values {
@@ -186,6 +200,7 @@ func sortedKeys[T any](values map[string]T) []string {
 	return keys
 }
 
+// render writes one JSON-RPC response frame to stdout.
 func render(res schema.Response) {
 	err := json.NewEncoder(os.Stdout).Encode(&res)
 	if err != nil {
@@ -193,6 +208,7 @@ func render(res schema.Response) {
 	}
 }
 
+// renderError writes a JSON-RPC error response using the provided request id.
 func renderError(id interface{}, code int, message string, data interface{}) {
 	render(schema.Response{
 		JsonRPC: jsonRPCVersion,

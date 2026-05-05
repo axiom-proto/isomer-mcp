@@ -2,7 +2,11 @@ package mcp
 
 import "isomer/internal/schema"
 
-// IsomerStore represents a store for entities and behaviors
+// IsomerStore indexes a parsed domain by resource kind and item name.
+//
+// The MCP server serves one resource per modeled item, so the YAML slices in
+// schema.Domain are normalized into maps for lookup by URIs such as
+// isomer://primitives/label.
 type IsomerStore struct {
 	Scalars     map[string]schema.Scalar
 	Operators   map[string]schema.Operator
@@ -13,7 +17,10 @@ type IsomerStore struct {
 	Services    map[string]schema.Service
 }
 
-// NewStore creates a new IsomerStore from a DomainRoot
+// NewStore creates an IsomerStore from a parsed DomainRoot.
+//
+// Duplicate names in the same resource kind are resolved by the last item in
+// the YAML document because each item is assigned into a map by name.
 func NewStore(d schema.DomainRoot) *IsomerStore {
 	store := &IsomerStore{
 		Scalars:     make(map[string]schema.Scalar),
