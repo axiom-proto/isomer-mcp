@@ -1,0 +1,731 @@
+domain:
+  scalars:
+    - name: string
+    - name: boolean
+    - name: int8
+    - name: int16
+    - name: int32
+    - name: int64
+    - name: single
+      remarks: Single-precision floating-point number
+    - name: double
+      remarks: Double-precision floating-point number
+    - name: decimal
+      syntax: decimal(p, s)
+      remarks: Fixed-precision decimal with precision `p` and scale `s`
+    - name: datetime
+  expr:
+    - name: optionalOf
+      syntax: optionalOf<T>
+      where:
+        - name: T
+          type: any
+      remarks: Defines a value of type `T` that may or may not contain a value
+    - name: ref
+      syntax: ref<T>
+      where:
+        - name: T
+          type: domain.entities.*
+      remarks: Defines a reference to a domain entity of `T`
+    - name: predicate
+      syntax: predicate<T>
+      where:
+        - name: T
+          type: any
+      remarks: Defines a boolean condition evaluated against an element of `T`
+    - name: collection
+      syntax: collection<T>
+      where:
+        - name: T
+          type: any
+      remarks: Defines a collection of elements of `T`
+    - name: enum
+      syntax: enum<T, u>
+      where:
+        - name: T
+          type: scalar
+          contains:
+            - string
+            - int8
+            - int16
+            - int32
+            - int64
+        - name: u
+          type: string
+          contains:
+            - standard
+            - binary
+      remarks: Defines a enumeration type for standard or binary usage
+    - name: regex
+      syntax: regex<M>(e)
+      where:
+        - name: M
+          type: enum<string, standard>
+          contains:
+            - ecma
+            - pcre
+      remarks: Defines a regular expression pattern using either ECMA or PCRE
+  operators:
+    - name: existsWith
+      syntax: existsWith(T, f, v)
+      where:
+        - name: T
+          type: expression<domain.entities.*>
+        - name: f
+          type: string
+        - name: v
+          type: string
+      returns:
+        - name: result
+          type: boolean
+      remarks:
+        Determines whether an entity of type `T` with the field `f` matching
+        the value `v` exists within the domain.
+    - name: equals
+      syntax: x equals y
+      where:
+        - name: x
+          type: expression<any>
+        - name: y
+          type: expression<any>
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether expression `x` equals to `y` by value comparison.
+    - name: exists
+      syntax: exists(T, r)
+      where:
+        - name: T
+          type: expression<domain.entities.*>
+        - name: r
+          type: ref<domain.entities.*>
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether entity `r` of type `T` exists within the domain.
+    - name: allOf
+      syntax: allOf(c, p)
+      where:
+        - name: c
+          type: collection<any>
+        - name: p
+          type: predicate<boolean>
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether all elements of `c` meet the condition of `p`
+    - name: anyOf
+      syntax: anyOf(c, p)
+      where:
+        - name: c
+          type: collection<any>
+        - name: p
+          type: predicate<boolean>
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether any elements of `c` meet the condition of `p`
+    - name: whereBy
+      syntax: whereBy(f, op, v)
+      where:
+        - name: f
+          type: string
+        - name: op
+          type: domain.operators.*
+        - name: v
+          type: any
+      returns:
+        - name: result
+          type: predicate<any>
+      remarks:
+        Produces a predicate that evaluates whether field `f` satisfies `op`
+        against value `v`
+    - name: itemsOf
+      syntax: itemsOf(T, c, i)
+      where:
+        - name: T
+          type: any
+        - name: c
+          type: domain.types.collection<T>
+        - name: i
+          type: T
+      remarks:
+        Iterator that returns individual elements of `T` from collection `c`
+        as item `i`
+    - name: inclusiveFrom
+      syntax: inclusiveFrom(c, v)
+      where:
+        - name: c
+          type: collection<any>
+        - name: v
+          type: any
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether element `v` is included in `c`
+    - name: typeOf
+      syntax: typeOf(T, v)
+      where:
+        - name: T
+          type: expression<any>
+        - name: v
+          type: any
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether `v` is of type `T`.
+    - name: empty
+      syntax: empty(v)
+      where:
+        - name: v
+          type: string
+      returns:
+        - name: success
+          type: boolean
+      remarks: This should return true if the string is null, empty, or contains only whitespace characters.
+    - name: unsetOf
+      syntax: unsetOf(T, v)
+      where:
+        - name: T
+          type: any
+        - name: v
+          type: any
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether value of `v` for type `T` is not set or provided
+    - name: is
+      syntax: x is y
+      where:
+        - name: x
+          type: expression<any>
+        - name: y
+          type: expression<any>
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether expression `x` equals to `y` by identity comparison.
+    - name: validFor
+      syntax: validFor(P, v)
+      where:
+        - name: P
+          type: expression<domain.primitives.*>
+        - name: v
+          type: expression<any>
+      returns:
+        - name: result
+          type: boolean
+      remarks: Determines whether expression `v` is valid for primitive of type `P`.
+    - name: and
+      syntax: and(x, y)
+      where:
+      - name: x
+        type: boolean
+      - name: y
+        type: boolean
+      returns:
+      - name: result
+        type: boolean
+      remarks: Determines whether boolean expression `x` and boolean expression `y` are true
+    - name: or
+      syntax: or(x, y)
+      where:
+      - name: x
+        type: boolean
+      - name: y
+        type: boolean
+      returns:
+      - name: result
+        type: boolean
+      remarks: Determines whether boolean expression `x` or boolean expression `y` is true
+    - name: not
+      syntax: not(x)
+      where:
+      - name: x
+        type: boolean
+      returns:
+      - name: result
+        type: boolean
+      remarks: Determines whether boolean expression `x` is false
+    - name: lessThan
+      syntax: lessThan(s, v)
+      where:
+        - name: s
+          type: or(int8, int16, int32, int64, decimal, single, double)
+        - name: v
+          type: or(int8, int16, int32, int64, decimal, single, double)
+      remarks: Determines whether value `s` is less than value `v`
+    - name: greaterThan
+      syntax: greaterThan(s, v)
+      where:
+        - name: s
+          type: or(int8, int16, int32, int64, decimal, single, double)
+        - name: v
+          type: or(int8, int16, int32, int64, decimal, single, double)
+      remarks: Determines whether value `s` is greater than value `v`
+    - name: between
+      syntax: between(s, min, max)
+      where:
+        - name: s
+          type: or(int8, int16, int32, int64, decimal, single, double)
+        - name: min
+          type: or(int8, int16, int32, int64, decimal, single, double)
+        - name: max
+          type: or(int8, int16, int32, int64, decimal, single, double)
+      remarks: Determines whether value `s` is inclusively between values `min` and `max`
+  primitives:
+    - name: identifier
+      base: string
+      from:
+        - name: value
+          type: string
+      constraints:
+        - empty(self.value) is false
+        - fixed length 36
+        - regex<ecma>(/^[a-fA-f0-9]{8}-[a-fA-f0-9]{4}-[a-fA-f0-9]{4}-[a-fA-f0-9]{4}-[a-fA-f0-9]{12}$/) is true
+    - name: label
+      base: string
+      from:
+        - name: value
+          type: string
+      constraints:
+        - empty(self.value) is false
+        - max length 50
+    - name: descriptor
+      base: string
+      from:
+        - name: value
+          type: string
+      constraints:
+        - empty(self.value) is false
+        - max length 200
+    - name: emailAddress
+      base: string
+      from:
+        - name: value
+          type: string
+      constraints:
+        - empty(self.value) is false
+        - max length 150
+        - regex<ecma>(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/) is true
+    - name: textBlob
+      base: string
+      from:
+        - name: value
+          type: string
+      constraints:
+        - empty(self.value) is false
+        - max length 6_000_000
+    - name: uri
+      base: string
+      from:
+        - name: value
+          type: string
+      constraints:
+        - empty(self.value) is false
+        - regex<ecma>(/^(?=.{1,250}$)(?:([a-z0-9+.-]+):\/\/)?(([^\s/?.#]+)@)?([^\s/?.#]+|(?:\[[a-f0-9:.]+\]))(?::([0-9]+))?(\/[^\s?#]*)?(\?[^\s#]*)?(#\S*)?$/i) is true
+    - name: activation
+      base: enum<int8, standard>
+      from: []
+      members:
+        - name: unavailable 
+          value: -1
+          # The entity is unavailable
+        - name: inactive
+          value: 0
+          # The entity is considered inactive.
+        - name: active
+          value: 1
+          # The entity is considered active.
+    - name: resolution
+      base: enum<int8, standard>
+      from: []
+      members:
+        - name: declined
+          value: 0
+          # The proposal has been declined.
+        - name: approved
+          value: 1
+          # The proposal has been approved.
+        - name: shelved
+          value: 2
+          # The proposal has been shelved for later approach.
+    - name: stage
+      base: enum<int8, standard>
+      from: []
+      members:
+        - name: new
+          value: 0
+          # The proposal is new.
+        - name: open
+          value: 1
+          # The proposal is open to providing evidence or modifications.
+        - name: voting
+          value: 2
+          # The proposal is open to voting but not modification or provision of evidence.
+        - name: resolved
+          value: 3
+          # The proposal is closed to voting, modification, or provision of evidence.
+    - name: vote
+      base: enum<int8, standard>
+      from: []
+      members:
+        - name: abstained
+          value: -1
+        - name: opposed
+          value: 0
+        - name: favored
+          value: 1
+    - name: group
+      base: enum<int8, standard>
+      from: []
+      members:
+        - name: standard
+          value: 0
+          # The user is a standard user.
+        - name: manager
+          value: 1
+          # The user is a managing user.
+  entities:
+    - name: tenant
+      plural: tenants
+      properties:
+        - name: tenantId
+          type: domain.primitives.identifier
+          required: true
+        - name: name
+          type: domain.primitives.label
+          required: true
+        - name: activation
+          type: domain.primitives.activation
+          required: true
+      rels:
+        - name: people
+          ownsMany: ref<domain.entities.person>
+        - name: scopes
+          ownsMany: ref<domain.entities.scope>
+      rules:
+        - unique(self.name)
+    - name: person
+      plural: people
+      properties:
+        - name: personId
+          type: domain.primitives.identifier
+          required: true
+        - name: given
+          type: domain.primitives.label
+          required: true
+        - name: surname
+          type: domain.primitives.label
+          required: true
+        - name: email
+          type: domain.primitives.emailAddress
+          required: true
+        - name: group
+          type: domain.primitives.group
+          required: true
+      rels:
+        - name: tenant
+          belongsTo: ref<domain.entities.tenant>
+        - name: participations
+          hasMany: ref<domain.entities.participant>
+        - name: votes
+          hasMany: ref<domain.entities.vote>
+      rules:
+        - unique(self.tenant, self.email)
+    - name: scope
+      plural: scopes
+      properties:
+        - name: scopeId
+          type: domain.primitives.identifier
+          required: true
+        - name: title
+          type: domain.primitives.label
+          required: true
+        - name: description
+          type: domain.primitives.descriptor
+          required: false
+        - name: activation
+          type: domain.primitives.activation
+          required: true
+      rels:
+        - name: tenant
+          belongsTo: ref<domain.entities.tenant>
+        - name: participants
+          ownsMany: ref<domain.entities.participant>
+        - name: evidences
+          ownsMany: ref<domain.entities.evidence>
+      rules: []
+    - name: participant
+      plural: participants
+      properties:
+        - name: permissions
+          type: int8
+          required: true
+      rels:
+        - name: person
+          hasOne: ref<domain.entities.person>
+        - name: scope
+          belongsTo: ref<domain.entities.scope>
+      rules: []
+    - name: proposal
+      plural: proposals
+      properties:
+        - name: proposalId
+          type: domain.primitives.identifier
+          required: true
+        - name: subject
+          type: domain.primitives.label
+          required: true
+        - name: description
+          type: domain.primitives.descriptor
+          required: true
+        - name: stage
+          type: domain.primitives.stage
+          required: true
+        - name: outcome
+          type: domain.primitives.resolution
+          required: false
+        - name: activation
+          type: domain.primitives.activation
+          required: true
+      rels:
+        - name: scope
+          belongsTo: ref<domain.entities.scope>
+        - name: votes
+          ownsMany: ref<domain.entities.vote>
+        - name: notes
+          ownsMany: ref<domain.entities.note>
+        - name: links
+          ownsMany: ref<domain.entities.link>
+      rules: []
+    - name: evidence
+      plural: evidences
+      properties:
+        - name: evidenceId
+          type: domain.primitives.identifier
+          required: true
+        - name: description
+          type: domain.primitives.descriptor
+          required: true
+      rels:
+        - name: scope
+          belongsTo: ref<domain.entities.scope>
+        - name: notes
+          hasMany: ref<domain.entities.note>
+        - name: links
+          hasMany: ref<domain.entities.link>
+      rules:
+        - unique(self.scope. self.description)
+    - name: note
+      plural: notes
+      properties:
+        - name: noteId
+          type: domain.primitives.identifier
+          required: true
+        - name: title
+          type: domain.primitives.label
+          required: true
+        - name: content
+          type: domain.primitives.textBlob
+          required: true
+        - name: version
+          type: int8
+          required: true
+        - name: activation
+          type: domain.primitives.activation
+          required: true
+      rels:
+        - name: proposal
+          belongsTo: ref<domain.entities.proposal>
+        - name: evidenceOf
+          hasMany: ref<domain.entities.evidence>
+      rules: []
+    - name: link
+      plural: links
+      properties:
+        - name: linkId
+          type: domain.primitives.identifier
+          required: true
+        - name: description
+          type: domain.primitives.descriptor
+          required: true
+        - name: uri
+          type: domain.primitives.uri
+          required: true
+        - name: activation
+          type: domain.primitives.activation
+          required: true
+      rels:
+        - name: proposal
+          belongsTo: ref<domain.entities.proposal>
+        - name: evidenceOf
+          hasMany: ref<domain.entities.evidence>
+      rules: []
+    - name: vote
+      plural: votes
+      properties:
+        - name: voteId
+          type: domain.primitives.identifier
+          required: true
+        - name: value
+          type: domain.primitives.vote
+          required: true
+        - name: reason
+          type: domain.primitives.descriptor
+          required: false
+      rels:
+        - name: person
+          hasOne: ref<domain.entities.person>
+        - name: proposal
+          belongsTo: ref<domain.entities.proposal>
+      rules:
+        - unique(self.person, self.proposal)
+    - name: policy
+      plural: policies
+      properties:
+        - name: policyId
+          type: domain.primitives.identifier
+          required: true
+        - name: description
+          type: domain.primitives.descriptor
+          required: true
+        - name: activation
+          type: domain.primitives.activation
+          required: true
+      rels:
+        - name: scope
+          belongsTo: ref<domain.entities.scope>
+      rules:
+        - unique(self.description, self.scope)
+    - name: log
+      plural: logs
+      properties:
+        - name: logId
+          type: domain.primitives.identifier
+          required: true
+        - name: subject
+          type: domain.primitives.label
+          required: true
+        - name: content
+          type: domain.primitives.textBlob
+          required: true
+      rels:
+        - name: proposal
+          belongsTo: ref<domain.entities.proposal>
+      rules: []
+  behaviors:
+    - name: startTenant
+      uses:
+        - domain.entities.tenant
+        - domain.entities.person
+      context: none
+      inputs:
+        - name: name
+          type: domain.primitives.label
+          required: true
+        - name: given
+          type: domain.primitives.label
+          required: true
+        - name: surname
+          type: domain.primitives.label
+          required: true
+        - name: email
+          type: domain.primitives.emailAddress
+          required: true
+      returns:
+        - name: result
+          type: boolean
+        - name: tenant
+          type: domain.entities.tenant
+        - name: person
+          type: domain.entities.person
+      preconditions:
+        - existsWith(domain.entities.tenant, name, inputs.name) is false
+        - validFor(domain.primitives.label, inputs.name) is true
+        - validFor(domain.primitives.label, inputs.given) is true
+        - validFor(domain.primitives.label, inputs.surname) is true
+        - validFor(domain.primitives.emailAddress, inputs.email) is true
+      postconditions:
+        - returns.result is true
+        - existsWith(domain.entities.tenant, returns.tenant.name)
+        - (returns.tenant.name equals inputs.name) is true
+        - inclusiveFrom(result.tenants.people, returns.person) is true
+        - (returns.person.given equals inputs.given) is true
+        - (returns.person.surname equals inputs.surname) is true
+        - (returns.person.email equals inputs.email) is true
+        - (returns.person.group is domain.primitives.group.manager) is true
+      exceptions:
+        - name: tenant_name_already_exists
+          condition: existsWith(domain.entities.tenant, name, inputs.name) is true
+        - name: tenant_name_not_valid
+          condition: validFor(domain.primitives.label, inputs.name) is false
+        - name: person_given_not_valid
+          condition: validFor(domain.primitives.label, inputs.given) is false
+        - name: person_surname_not_valid
+          condition: validFor(domain.primitives.label, inputs.surname) is false
+        - name: person_email_not_valid
+          condition: validFor(domain.primitives.emailAddress, inputs.email) is false
+  services:
+    - name: tenantSearch
+      capabilities:
+        - name: tenantExistsByName
+          supports:
+            - domain.behaviors.startTenant
+          inputs:
+            - name: withName
+              type: domain.primitives.label
+              required: true
+          returns:
+            - name: result
+              type: boolean
+              remarks: True if a tenant with the provided name exists; otherwise, false.
+        - name: locatePerson
+          supports: []
+          inputs:
+            - name: fromTenant
+              type: domain.entities.tenant
+              required: true
+            - name: withEmail
+              type: domain.primitives.emailAddress
+              required: true
+          returns:
+            - name: result
+              type: boolean
+              remarks: True if the person with the provided email address was found; otherwise, false.
+            - name: person
+              type: optionalOf<domain.entities.person>
+              remarks: The person within the tenant with the matching email address; otherwise, nothing.
+    - name: tenantStorage
+      capabilities:
+        - name: storeTenant
+          supports:
+            - domain.behaviors.startTenant
+          inputs:
+            - name: tenant
+              type: domain.entities.tenant
+              required: true
+          returns:
+            - name: result
+              type: boolean
+              remarks: True if the tenant was successfully stored; otherwise, false.
+            - name: tenant
+              type: optionalOf<domain.entities.tenant>
+              remarks: The tenant after successful storage; otherwise, nothing.
+        - name: storePerson
+          supports:
+            - domain.behaviors.startTenant
+          inputs:
+            - name: onTenant
+              type: domain.entities.tenant
+              required: true
+            - name: withPerson
+              type: domain.entities.person
+              required: true
+          returns:
+            - name: result
+              type: boolean
+              remarks: True if the person was successfully stored and attached to the tenant; otheriwse, false.
+            - name: person
+              type: optionalOf<domain.entities.person>
+              remarks: The person after successful storage and attachment; otherwise, nothing.
