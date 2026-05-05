@@ -2,3 +2,4 @@
 .gocache/
 build/
 .idea/
+.vscode/
