@@ -1,163 +1,77 @@
 # Isomer
 
-Isomer is a small MCP stdio server for Axiom Protocol durable domain modeling files.
+Isomer is an MCP stdio server that makes large domain model documents navigable for AI agents without loading the entire document into context.
 
-It loads a domain model from YAML, indexes the modeled vocabulary, and exposes each item as an MCP resource. Agents can then inspect a domain by reading focused resources such as `isomer://entities/tenant` or `isomer://primitives/identifier` instead of loading the entire model into context.
+## Problem
 
-## Intent
+Durable domain models describe the complete language of a system — its value types, constrained primitives, aggregate entities, domain behaviors, and external service boundaries — in a single coherent document. That document is authoritative but expensive: loading it wholesale into an agent's context window on every request is wasteful when the agent needs only one entity or one behavior at a time.
 
-Durable domain models are useful because they describe the language, rules, entities, behaviors, and service boundaries of a system in one coherent document. Large model files can be expensive for agents to consume directly, though. Isomer turns that document into a navigable resource graph.
+## Solution
 
-The project is designed to make domain inspection:
+Isomer indexes a domain model file and exposes each item in it as an individually addressable MCP resource. An agent reads only what it needs, identified by a stable URI of the form `isomer://<kind>/<name>`. The source document stays a pure domain model; Isomer adds no MCP-specific structure to it.
 
-- Targeted: agents read only the scalar, primitive, entity, behavior, or service they need.
-- Deterministic: resources are addressed by stable URIs.
-- Friendly to authoring: the source YAML remains a domain model, not an MCP-specific document.
-- Easy to test: the server speaks MCP over stdio and can be checked with an MCP inspector.
+## Domain Model Vocabulary
 
-## Resource Model
+The schema layer defines six kinds of modeled items:
 
-Isomer serves one resource per modeled item. The current resource kinds are:
+**Scalar** — a named built-in value type such as a string, integer, decimal, or datetime. Scalars are the leaves of the type system.
 
-- `scalars`
-- `expressions`
-- `operators`
-- `primitives`
-- `entities`
-- `behaviors`
-- `services`
+**Expression** — a parameterized type form such as a reference, collection, or optional wrapper. Expressions are composed from scalars and other named types.
 
-Resource URIs use this form:
+**Operator** — a named domain operation used in rules and constraints, such as membership tests, equality checks, or temporal validity.
 
-```text
-isomer://<kind>/<name>
+**Primitive** — a constrained domain value type. A primitive is either a scalar with validation constraints or an enumeration of named members with fixed values.
+
+**Entity** — a durable aggregate with typed properties, typed relations to other entities, and a set of invariant rules expressed using operators.
+
+**Behavior** — a domain action with a named context, typed inputs, typed return values, preconditions, postconditions, and a set of named exception cases.
+
+**Service** — an external service boundary, grouping named capabilities that the domain depends on.
+
+## Data Flow
+
 ```
+YAML domain model file
+  → DomainRoot        parsed into nested Go structs
+  → IsomerStore       slices normalized into name-keyed maps for O(1) lookup
+  → MCP stdio server  JSON-RPC 2.0 over stdin/stdout
 
-For example:
-
-```text
-isomer://entities/tenant
-isomer://primitives/identifier
-isomer://operators/validFor
+resources/list   returns a sorted list of all resource URIs
+resources/read   returns one item serialized back to YAML
 ```
-
-`resources/list` returns the available resources, and `resources/read` returns one modeled item serialized as YAML.
-
-## Requirements
-
-- Go 1.26.2 or newer, matching `go.mod`
-- An MCP-compatible client or inspector for interactive testing
-
-## Quick Start
-
-Build the server:
-
-```sh
-mkdir -p build
-go build -o build/isomer .
-```
-
-Run the sample model over stdio:
-
-```sh
-./build/isomer serve ./samples/decide.yml
-```
-
-The server reads JSON-RPC messages from stdin and writes JSON-RPC responses to stdout. For a quick manual smoke test:
-
-```sh
-printf '%s\n' \
-  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' \
-  '{"jsonrpc":"2.0","id":2,"method":"resources/list"}' \
-  | ./build/isomer serve ./samples/decide.yml
-```
-
-Read a single resource:
-
-```sh
-printf '%s\n' \
-  '{"jsonrpc":"2.0","id":1,"method":"resources/read","params":{"uri":"isomer://entities/tenant"}}' \
-  | ./build/isomer serve ./samples/decide.yml
-```
-
-## VS Code MCP Configuration
-
-This repository includes an example `.vscode/mcp.json` configuration:
-
-```json
-{
-  "servers": {
-    "isomer-test": {
-      "type": "stdio",
-      "command": "./build/isomer",
-      "args": ["serve", "./samples/decide.yml"]
-    }
-  },
-  "inputs": []
-}
-```
-
-Build `./build/isomer` first, then start or refresh the MCP server from your client.
 
 ## Commands
 
-Show available commands:
-
 ```sh
-go run . --help
-```
-
-Serve a domain model over MCP stdio:
-
-```sh
-go run . serve ./samples/decide.yml
-```
-
-Validate that a model can be parsed:
-
-```sh
-go run . validate ./samples/decide.yml
-```
-
-Print the current version:
-
-```sh
-go run . version
+isomer serve <file>      # index and serve a domain model over MCP stdio
+isomer validate <file>   # parse and validate a domain model file
+isomer version           # print the server version
 ```
 
 ## Project Layout
 
 ```text
-main.go                    CLI entrypoint
-internal/cmd/              Cobra commands
-internal/schema/           YAML and JSON-RPC/MCP data structures
-internal/mcp/              MCP stdio server and resource store
-samples/decide.yml         Example durable domain model
-samples/init.json          Minimal initialize request sample
-.vscode/mcp.json           Example local MCP server configuration
+main.go                    CLI entry point
+internal/cmd/              Cobra commands: serve, validate, version
+internal/schema/           Domain model types and JSON-RPC/MCP message structures
+internal/mcp/              IsomerStore (index) and MCP stdio protocol handler
 ```
 
-## Development Checks
+## Build
 
-Format Go files:
-
-```sh
-gofmt -w main.go internal
-```
-
-Run tests:
-
-```sh
-go test ./...
-```
-
-Build the local MCP binary:
+MCP clients register servers as executable paths, not as `go run` invocations. Building a binary gives the client a stable path to launch the server from and eliminates the compile step from each startup.
 
 ```sh
 mkdir -p build
 go build -o build/isomer .
 ```
 
+## Development Checks
+
+```sh
+gofmt -w main.go internal   # format
+```
+
 ## License
 
-This project is licensed under MPL 2.0. See `LICENSE.md`.
+MPL 2.0. See `LICENSE.md`.
