@@ -9,6 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// validateCmd Runs a quick validation pass by loading the target YAML and unmarshalling.
 var validateCmd = &cobra.Command{
 	Use:   "validate [file]",
 	Short: "Validate a DDM meets Ogham-level compliance",
