@@ -1,0 +1,34 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.3'
+      - name: Build binaries
+        env:
+          LDFLAGS: "-s -w -X main.version=${{ github.ref_name }}"
+        run: |
+          GOOS=linux    GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/linux/amd64/isomer .
+          GOOS=linux    GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/linux/arm64/isomer .
+          GOOS=darwin   GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/darwin/amd64/isomer .
+          GOOS=darwin   GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/darwin/arm64/isomer .
+          GOOS=windows  GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/windows/isomer.exe .
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
+          generate_release_notes: true
