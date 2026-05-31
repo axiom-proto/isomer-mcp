@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	jsonRPCVersion = "2.0"
-	uriScheme      = "isomer://"
-	yamlMimeType   = "application/x-yaml"
+	jsonRPCVersion  = "2.0"
+	uriScheme       = "isomer://"
+	yamlMimeType    = "application/x-yaml"
+	protocolVersion = "2024-11-05"
 )
 
 type readResourceContent struct {
@@ -35,7 +36,7 @@ func handleInitialize(req schema.Request) {
 		JsonRPC: jsonRPCVersion,
 		Id:      req.Id,
 		Result: &schema.HandshakeResponse{
-			ProtocolVersion: "2024-11-05",
+			ProtocolVersion: protocolVersion,
 			Capabilities: map[string]interface{}{
 				"resources": map[string]interface{}{
 					"subscribe":   false,
@@ -122,25 +123,25 @@ func lookupResourceYAML(uri string, store *IsomerStore) (string, bool, error) {
 	switch kind {
 	case "scalars":
 		item, ok := store.Scalars[name]
-		return marshalYAML(item, ok)
+		return marshalJSON(item, ok)
 	case "operators":
 		item, ok := store.Operators[name]
-		return marshalYAML(item, ok)
+		return marshalJSON(item, ok)
 	case "primitives":
 		item, ok := store.Primitives[name]
-		return marshalYAML(item, ok)
+		return marshalJSON(item, ok)
 	case "expressions":
 		item, ok := store.Expressions[name]
-		return marshalYAML(item, ok)
+		return marshalJSON(item, ok)
 	case "entities":
 		item, ok := store.Entities[name]
-		return marshalYAML(item, ok)
+		return marshalJSON(item, ok)
 	case "behaviors":
 		item, ok := store.Behaviors[name]
-		return marshalYAML(item, ok)
+		return marshalJSON(item, ok)
 	case "services":
 		item, ok := store.Services[name]
-		return marshalYAML(item, ok)
+		return marshalJSON(item, ok)
 	default:
 		return "", false, fmt.Errorf("unsupported resource kind: %s", kind)
 	}
@@ -172,6 +173,19 @@ func marshalYAML(value interface{}, ok bool) (string, bool, error) {
 	}
 
 	buffer, err := yaml.Marshal(value)
+	if err != nil {
+		return "", false, err
+	}
+
+	return string(buffer), true, nil
+}
+
+func marshalJSON(value interface{}, ok bool) (string, bool, error) {
+	if !ok {
+		return "", false, nil
+	}
+
+	buffer, err := json.Marshal(value)
 	if err != nil {
 		return "", false, err
 	}
