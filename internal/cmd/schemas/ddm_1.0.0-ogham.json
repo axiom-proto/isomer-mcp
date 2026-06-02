@@ -1,0 +1,501 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "http://intriguedeviation.com/axiom/1.0.0/ddm",
+  "title": "Axiom Protocol Durable Domain Model (DDM) v1.0.0-ogham",
+  "description": "YAML validation schema for DDM files.",
+  "type": "object",
+  "required": ["domain"],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {
+      "description": "Defines the durable domain model, including type vocabulary, entities, behaviors, and services.",
+      "$ref": "#/$defs/domain"
+    }
+  },
+  "$defs": {
+    "domain": {
+      "description": "Groups all durable domain model declarations used as the canonical model for generated artifacts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scalars",
+        "expr",
+        "operators",
+        "primitives",
+        "entities",
+        "behaviors"
+      ],
+      "properties": {
+        "scalars": {
+          "description": "Lists primitive scalar value types available to the domain model.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/scalar" }
+        },
+        "expr": {
+          "description": "Lists generic expression forms available for declaring typed domain values.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/expression" }
+        },
+        "operators": {
+          "description": "Lists named operations that can be used in rules, constraints, and behavior conditions.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/operator" }
+        },
+        "primitives": {
+          "description": "Lists constrained domain primitive types derived from scalar or expression types.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/primitive" }
+        },
+        "entities": {
+          "description": "Lists domain entities, their properties, relationships, and invariants.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/entity" }
+        },
+        "behaviors": {
+          "description": "Lists domain behaviors with their dependencies, inputs, outcomes, and contract conditions.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/behavior" }
+        },
+        "services": {
+          "description": "Lists service surfaces that expose capabilities supporting domain behaviors.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/service" }
+        }
+      }
+    },
+    "scalar": {
+      "description": "Defines a named scalar type and optional syntax or explanatory notes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "description": "Names the scalar type.",
+          "$ref": "#/$defs/identifier"
+        },
+        "syntax": {
+          "description": "Describes the scalar's textual or parameterized syntax, when applicable.",
+          "$ref": "#/$defs/nullableText"
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the scalar.",
+          "$ref": "#/$defs/nullableText"
+        }
+      }
+    },
+    "expression": {
+      "description": "Defines a named expression form with syntax, type parameters, and usage notes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "syntax", "where", "remarks"],
+      "properties": {
+        "name": {
+          "description": "Names the expression form.",
+          "$ref": "#/$defs/identifier"
+        },
+        "syntax": {
+          "description": "Describes the expression's textual or generic syntax.",
+          "$ref": "#/$defs/text"
+        },
+        "where": {
+          "description": "Defines type parameters and constraints used by the expression.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/typeParameter" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the expression.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "operator": {
+      "description": "Defines an operator, including syntax, operands, return values, and notes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "syntax", "where"],
+      "properties": {
+        "name": {
+          "description": "Names the operator.",
+          "$ref": "#/$defs/identifier"
+        },
+        "syntax": {
+          "description": "Describes the operator's invocation or infix syntax.",
+          "$ref": "#/$defs/text"
+        },
+        "where": {
+          "description": "Defines named operands and their expected types.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nameTypePair" }
+        },
+        "returns": {
+          "description": "Defines named values produced by the operator.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nameTypePair" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the operator.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "primitive": {
+      "description": "Defines a constrained domain primitive based on another type.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "base", "from"],
+      "properties": {
+        "name": {
+          "description": "Names the primitive type.",
+          "$ref": "#/$defs/identifier"
+        },
+        "base": {
+          "description": "Identifies the scalar or expression type the primitive is based on.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "from": {
+          "description": "Defines constructor or source parameters for deriving the primitive.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nameTypePair" }
+        },
+        "constraints": {
+          "description": "Lists validation constraints that values of the primitive must satisfy.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/text" }
+        },
+        "members": {
+          "description": "Lists named values for finite primitive value sets such as enumerations.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nameValuePair" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the primitive.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "entity": {
+      "description": "Defines a domain entity with properties, relationships, rules, and notes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "plural", "properties", "rels", "rules"],
+      "properties": {
+        "name": {
+          "description": "Names the entity in singular form.",
+          "$ref": "#/$defs/identifier"
+        },
+        "plural": {
+          "description": "Names the entity collection or plural form.",
+          "$ref": "#/$defs/identifier"
+        },
+        "properties": {
+          "description": "Lists the entity's fields and their requiredness.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/property" }
+        },
+        "rels": {
+          "description": "Lists relationships from this entity to other domain types.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/relation" }
+        },
+        "rules": {
+          "description": "Lists invariants or business rules that apply to the entity.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/text" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the entity.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "relation": {
+      "description": "Defines a named entity relationship with exactly one relationship kind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "description": "Names the relationship.",
+          "$ref": "#/$defs/identifier"
+        },
+        "ownsMany": {
+          "description": "Identifies a collection of child entities owned by this entity.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "ownsOne": {
+          "description": "Identifies a single child entity owned by this entity.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "hasMany": {
+          "description": "Identifies a collection of associated entities not owned by this entity.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "hasOne": {
+          "description": "Identifies a single associated entity not owned by this entity.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "belongsTo": {
+          "description": "Identifies the parent or owning entity this entity belongs to.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the relationship.",
+          "$ref": "#/$defs/text"
+        }
+      },
+      "oneOf": [
+        { "required": ["ownsMany"] },
+        { "required": ["ownsOne"] },
+        { "required": ["hasMany"] },
+        { "required": ["hasOne"] },
+        { "required": ["belongsTo"] }
+      ]
+    },
+    "behavior": {
+      "description": "Defines a domain behavior as a contract with dependencies, inputs, outputs, conditions, and exceptions.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "uses",
+        "context",
+        "inputs",
+        "returns",
+        "preconditions",
+        "postconditions",
+        "exceptions"
+      ],
+      "properties": {
+        "name": {
+          "description": "Names the behavior.",
+          "$ref": "#/$defs/identifier"
+        },
+        "uses": {
+          "description": "Lists domain types or services used by the behavior.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/typeRef" }
+        },
+        "context": {
+          "description": "Defines ambient context required by the behavior, or none when no context is needed.",
+          "oneOf": [
+            { "const": "none" },
+            {
+              "type": "array",
+              "items": { "$ref": "#/$defs/nameTypePair" }
+            }
+          ]
+        },
+        "inputs": {
+          "description": "Lists explicit inputs accepted by the behavior.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/property" }
+        },
+        "returns": {
+          "description": "Lists named values returned by the behavior.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nameTypePair" }
+        },
+        "preconditions": {
+          "description": "Lists conditions that must hold before the behavior is performed.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/text" }
+        },
+        "postconditions": {
+          "description": "Lists conditions that must hold after the behavior completes successfully.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/text" }
+        },
+        "exceptions": {
+          "description": "Lists named exceptional outcomes and the conditions that trigger them.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nameConditionPair" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the behavior.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "service": {
+      "description": "Defines a service boundary and the capabilities it provides.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "capabilities"],
+      "properties": {
+        "name": {
+          "description": "Names the service.",
+          "$ref": "#/$defs/identifier"
+        },
+        "capabilities": {
+          "description": "Lists capabilities exposed by the service.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/capability" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the service.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "capability": {
+      "description": "Defines a named service capability and the behaviors it supports.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "supports", "inputs", "returns"],
+      "properties": {
+        "name": {
+          "description": "Names the capability.",
+          "$ref": "#/$defs/identifier"
+        },
+        "supports": {
+          "description": "Lists behavior names supported by this capability.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "inputs": {
+          "description": "Lists explicit inputs accepted by the capability.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/property" }
+        },
+        "returns": {
+          "description": "Lists named values returned by the capability.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/nameTypePair" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the capability.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "typeParameter": {
+      "description": "Defines a named type parameter and any contained allowable values.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "description": "Names the type parameter.",
+          "$ref": "#/$defs/identifier"
+        },
+        "type": {
+          "description": "Identifies the type constraint for the parameter.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "contains": {
+          "description": "Lists allowable member values or subtypes for the parameter.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/text" }
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the type parameter.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "property": {
+      "description": "Defines a named, typed property and whether it is required.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "required"],
+      "properties": {
+        "name": {
+          "description": "Names the property.",
+          "$ref": "#/$defs/identifier"
+        },
+        "type": {
+          "description": "Identifies the property's domain type.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "required": {
+          "description": "Indicates whether the property must be present.",
+          "type": "boolean"
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the property.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "nameTypePair": {
+      "description": "Defines a reusable named type reference with optional notes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "description": "Names the typed value.",
+          "$ref": "#/$defs/identifier"
+        },
+        "type": {
+          "description": "Identifies the value's domain type.",
+          "$ref": "#/$defs/typeRef"
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the named type reference.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "nameValuePair": {
+      "description": "Defines a reusable named literal value with optional notes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {
+          "description": "Names the literal value.",
+          "$ref": "#/$defs/identifier"
+        },
+        "value": {
+          "description": "Provides the literal string, number, or boolean value.",
+          "type": ["string", "number", "boolean"]
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the named value.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "nameConditionPair": {
+      "description": "Defines a reusable named condition with optional notes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "condition"],
+      "properties": {
+        "name": {
+          "description": "Names the condition or outcome.",
+          "$ref": "#/$defs/identifier"
+        },
+        "condition": {
+          "description": "Describes the condition that applies.",
+          "$ref": "#/$defs/text"
+        },
+        "remarks": {
+          "description": "Provides explanatory notes about the named condition.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "identifier": {
+      "description": "Defines the identifier format used for names in the domain model.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.]*$"
+    },
+    "typeRef": {
+      "description": "References a scalar, expression, primitive, entity, service, or other declared domain type.",
+      "type": "string",
+      "minLength": 1
+    },
+    "text": {
+      "description": "Defines required non-empty explanatory text.",
+      "type": "string",
+      "minLength": 1
+    },
+    "nullableText": {
+      "description": "Defines optional explanatory text that may be omitted with null.",
+      "type": ["string", "null"]
+    }
+  }
+}
