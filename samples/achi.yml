@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../internal/cmd/schemas/ddm_1.0.0-ogham.json
 domain:
   scalars:
     - name: string
@@ -202,6 +203,7 @@ domain:
   primitives:
     - name: playerSide
       base: enum<int8, standard>
+      from: []
       members:
         - name: red
           value: 0
@@ -225,6 +227,7 @@ domain:
         - max 8
     - name: boardPhase
       base: enum<int8, standard>
+      from: []
       members:
         - name: placement
           value: 0
@@ -239,6 +242,7 @@ domain:
           required: true
         - name: label
           type: domain.primitives.playerLabel
+          required: true
       rels:
         - name: tokens
           ownsMany: domain.entities.token
@@ -253,6 +257,7 @@ domain:
       rels:
         - name: player
           belongsTo: domain.entities.player 
+      rules: []
     - name: grid
       plural: grids
       properties:
@@ -267,8 +272,10 @@ domain:
           required: true
         - name: adjacents
           type: collection<pair<domain.primitives.tokenPosition>>
+          required: true
         - name: victoryAlignments
           type: collection<triplet<domain.primitives.tokenPosition>>
+          required: true
       rels:
         - name: redPlayer
           hasOne: ref<domain.entities.player>

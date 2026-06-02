@@ -22,11 +22,11 @@ jobs:
         env:
           LDFLAGS: "-s -w -X main.version=${{ github.ref_name }}"
         run: |
-          GOOS=linux    GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/linux/amd64/isomer .
-          GOOS=linux    GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/linux/arm64/isomer .
-          GOOS=darwin   GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/darwin/amd64/isomer .
-          GOOS=darwin   GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/darwin/arm64/isomer .
-          GOOS=windows  GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/windows/isomer.exe .
+          GOOS=linux    GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/isomer-linux-amd64 .
+          GOOS=linux    GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/isomer-linux-arm64 .
+          GOOS=darwin   GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/isomer-darwin-amd64 .
+          GOOS=darwin   GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/isomer-darwin-arm64 .
+          GOOS=windows  GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/isomer-win-amd64.exe .
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
