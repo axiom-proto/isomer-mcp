@@ -191,7 +191,7 @@ type Domain struct {
 	Operators   []Operator   `yaml:"operators" json:"operators"`
 	Primitives  []Primitive  `yaml:"primitives" json:"primitives"`
 	Entities    []Entity     `yaml:"entities" json:"entities"`
-	Behaviors   []Behavior   `yaml:"behaviors,omitempty" json:"behaviors,omitempty"`
+	Behaviors   []Behavior   `yaml:"behaviors" json:"behaviors,omitempty"`
 	Services    []Service    `yaml:"services,omitempty" json:"services,omitempty"`
 }
 
