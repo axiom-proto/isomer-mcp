@@ -46,7 +46,7 @@ func handleInitialize(req schema.Request) {
 			},
 			ServerInfo: map[string]string{
 				"name":    "isomer",
-				"version": "0.1.3",
+				"version": "0.1.4",
 			},
 		},
 	}
